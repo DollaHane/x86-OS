@@ -78,7 +78,7 @@ clean: A rule to remove all generated files.
 
 __________________________________________________
 4. Usage:
-To build the project: make
+To build the project run: make
 To clean up: make clean
 
 __________________________________________________
