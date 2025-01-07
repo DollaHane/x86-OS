@@ -8,60 +8,64 @@ org 0x7C00
 ; Tell assembler to emit 16-bit code, which is necessary for real mode used by early boot processes
 bits 16
 
+; Define end-of-line characters for DOS newline (carriage return followed by line feed)
 %define ENDL 0x0D, 0x0A
 
+; Start of the program
 start:
-  ; Used at the beginning of an assembly program to ensure the execution starts at the main function, 
-  ; which contains the primary logic of the program.
-  jmp main
+    ; Jump to main to bypass any data that might be placed before the code
+    ; Used at the beginning of an assembly program to ensure the execution starts at the main function, 
+    ; which contains the primary logic of the program.
+    jmp main
 
+; Function to print a string to the screen
+; Parameters:
+;   - DS:SI points to the string to be printed
+puts:
+    ; These push instructions save the current values of si and ax onto the stack. This is done to preserve these registers' values since they will be modified in the function.
+    push si
+    push ax
 
-; Prints a string to the screen
-; Params:
-;   - s:si The string to print is pointed to by the SI register.
-puts: 
-  ; These push instructions save the current values of si and ax onto the stack. This is done to preserve these registers' values since they will be modified in the function.
-  push si
-  push ax
+.loop:
+    lodsb                 ; loads a byte from the address pointed to by SI into AL. The SI register is then automatically incremented.
+    or al, al             ; checks if AL is zero (null terminator) by performing an OR operation with itself, which sets the Zero flag if AL is zero.
+    jz .done              ; If AL is zero (jz .done), the loop ends; otherwise, it jumps back to .loop to continue reading characters.
+    mov ah, 0x0e          ; Set up for BIOS interrupt to write character to screen in teletype mode
+    mov bh, 0             ; Page number (for text mode)
+    int 0x10              ; Call BIOS interrupt to print character    
+    jmp .loop             ; Continue loop to print next character
 
-.loop: 
-  lodsb                 ; loads a byte from the address pointed to by SI into AL. The SI register is then automatically incremented.
-  or al, al             ; checks if AL is zero (null terminator) by performing an OR operation with itself, which sets the Zero flag if AL is zero.
-  jz .done              ; If AL is zero (jz .done), the loop ends; otherwise, it jumps back to .loop to continue reading characters.
-  mov ah, 0x0e          ; call BIOS interupt
-  mov bh, 0
-  int 0x10
-  jmp .loop
+.done:
+    pop ax                ; Restore the saved registers
+    pop si                ; Restore the saved registers
+    ret                   ; Return control to the caller          
 
-.done:                  ; The function restores the previously pushed registers from the stack.
-  pop ax
-  pop si
-  ret                   ; ret returns control to the caller.
-
-main: 
-
-    ; Setup data segements:
-    mov ax, 0           ; cant't write to ds/es directory
+; Main program execution starts here
+main:
+    ; Initialize data and extra segment registers to 0 for simplicity
+    mov ax, 0           
     mov ds, ax
     mov es, ax
 
-    ; Setup stack:
+    ; Set up stack segment and stack pointer. Here, we're using the same memory where the code is loaded, but at the highest address, growing downward.
     mov ss, ax
-    mov sp, 0x7C00      ; stack grows downward from where we are loaded in memory
+    mov sp, 0x7C00      
 
-    ; Print message
-    mov si, msg_hello   ; set si to the address of the string
-    call puts           ; call the puts function
+    ; Print the greeting message
+    mov si, msg_hello   ; Load the address of the message into SI
+    call puts           ; Call the print function
 
-    ; Halt the CPU, stopping further execution:
+    ; Halt the CPU to stop execution
     hlt
 
 .hlt:
-    ; Label for an infinite loop to keep the CPU halted:
-    jmp .hlt            ; this puts the CPU in an infinite loop
+    ; Infinite loop to keep CPU halted, preventing boot from continuing to next sector
+    jmp .hlt            
 
+; Define the greeting message with DOS newline characters
 msg_hello db "Hello X, this is DollaHane", ENDL, 0
 
+; Pad the boot sector to 510 bytes and add boot signature
 ; This calculates the number of bytes from the start of this section to the current position
 ; Then, it pads the rest of the first sector (510 bytes - current size) with zeros
 ; Finally, it ensures the boot sector ends with the boot signature 0xAA55
