@@ -23,16 +23,17 @@ start:
 ;   - DS:SI points to the string to be printed
 puts:
     ; These push instructions save the current values of si and ax onto the stack. This is done to preserve these registers' values since they will be modified in the function.
-    push si
-    push ax
+    ; By pushing these registers, we ensure that after the function completes, we can restore these registers to their original state, preserving the caller's context.
+    push si               ; si will be used to walk through the string, changing its value.
+    push ax               ; ax (specifically al for the character and ah for the BIOS call) will be modified during the loop.
 
 .loop:
-    lodsb                 ; loads a byte from the address pointed to by SI into AL. The SI register is then automatically incremented.
+    lodsb                 ; Loads a byte from the address [DS:SI] into AL, then automatically increments SI to point to the next byte. This effectively moves through the string character by character.
     or al, al             ; checks if AL is zero (null terminator) by performing an OR operation with itself, which sets the Zero flag if AL is zero.
-    jz .done              ; If AL is zero (jz .done), the loop ends; otherwise, it jumps back to .loop to continue reading characters.
+    jz .done              ; jz = (Jump if Zero) - If AL is zero (jz .done), the loop ends; otherwise, it jumps back to .loop to continue reading characters.
     mov ah, 0x0e          ; Set up for BIOS interrupt to write character to screen in teletype mode
-    mov bh, 0             ; Page number (for text mode)
-    int 0x10              ; Call BIOS interrupt to print character    
+    mov bh, 0             ; Sets the page number for text mode to 0 (default).
+    int 0x10              ; This invokes the BIOS interrupt service routine to display the character represented in AL on the screen.
     jmp .loop             ; Continue loop to print next character
 
 .done:
@@ -52,7 +53,7 @@ main:
     mov sp, 0x7C00      
 
     ; Print the greeting message
-    mov si, msg_hello   ; Load the address of the message into SI
+    mov si, msg_hello   ; Load the "msg_hello" string into SI
     call puts           ; Call the print function
 
     ; Halt the CPU to stop execution
@@ -79,6 +80,15 @@ dw 0xAA55
 ; _________________________________________
 ; The following OS is built following the tutorials presented by Nanobyte
 ; https://www.youtube.com/watch?app=desktop&v=9t-SPC7Tczc&list=LL&index=5
+
+; _________________________________________
+; Overview of Registers:
+; Registers are small, fast storage locations inside the CPU. They're used for various purposes 
+; like holding data temporarily during computation, managing memory addresses, or storing results of operations.
+
+; AX (Accumulator): Often used for arithmetic computations and I/O operations. It's split into AH (high byte) and AL (low byte).
+; SI (Source Index): Typically used in string operations to point to a source memory address.
+; Flags Register: Contains status flags like the Zero flag, which we'll see in action here.
 
 ; _________________________________________
 ; How the BIOS finds an OS (Legacy Booting):
