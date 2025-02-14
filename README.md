@@ -11,6 +11,7 @@ See the assets directory for screenshots of various concepts explained.
 ## Acknowledgements
 
 - Nanobyte's [Building an OS](https://www.youtube.com/watch?v=9t-SPC7Tczc&list=PLFjM7v6KGMpiH2G-kT781ByCNC_0pKpPN) tutorial series.
+- Nanobyte [Github](https://github.com/nanobyte-dev)
 
 ## License
 
