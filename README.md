@@ -6,7 +6,7 @@ This code includes all code up until the third video in the series, "The FAT fil
 
 See the assets directory for screenshots of various concepts explained.
 
-![Project Image](https://github.com/DollaHane/build-software-template/blob/main/components/Assets/Thumbnail.png)
+![Project Image](https://github.com/DollaHane/x86-OS/blob/main/assets/Thumbnail.png)
 
 ## Acknowledgements
 
