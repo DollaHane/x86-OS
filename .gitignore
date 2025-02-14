@@ -12,6 +12,7 @@ coverage
 .next/
 out/
 build
+old
 
 # misc
 .DS_Store
